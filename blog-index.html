@@ -168,14 +168,10 @@ h1 span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webki
   transition: transform .2s ease;
   border-radius: 2px 2px 0 0;
 }
-.nav-item:hover .nav-btn { color: var(--text); }
-.nav-item:hover .nav-btn::after { transform: scaleX(1); }
-
 .nav-chevron-icon {
   font-size: 9px; color: var(--text-muted);
   transition: transform .2s;
 }
-.nav-item:hover .nav-chevron-icon { transform: rotate(180deg); }
 
 /* ── MEGA MENU ── */
 .mega-menu {
@@ -189,11 +185,6 @@ h1 span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webki
   pointer-events: none;
   transform: translateY(-8px);
   transition: opacity .18s ease, transform .18s ease;
-}
-.nav-item:hover .mega-menu {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateY(0);
 }
 
 .mega-inner {
@@ -322,11 +313,42 @@ h1 span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webki
 .nav-search-input:focus { width: 220px; border-color: var(--accent); }
 .nav-search-input::placeholder { color: var(--text-muted); }
 
-/* モバイルではナビ非表示 → top-controls で代替 */
+/* モバイル対応 */
 @media (max-width: 768px) {
-  .mega-nav { display: none; }
-  .wrapper { padding-top: 28px !important; }
+  .wrapper { padding-top: 82px !important; }
+  /* ナビバーは表示したまま */
+  .nav-logo-text { font-size: 13px; }
+  .nav-right { display: none; } /* 検索・フラグは省略 */
+  .nav-cats-wrap::after { display: none; }
+
+  /* mega menu をフルスクリーン対応 */
+  .mega-menu { position: fixed; top: 54px; left: 0; right: 0; max-height: calc(100vh - 54px); overflow-y: auto; }
+  .mega-inner { grid-template-columns: 100px 1fr; gap: 12px; padding: 14px 12px 20px; }
+  .mega-hero { height: auto; }
+  .mega-articles { grid-template-columns: 1fr 1fr; }
 }
+
+/* ホバーによるメガメニュー表示（PC） */
+@media (hover: hover) {
+  .nav-item:hover .mega-menu {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+  }
+  .nav-item:hover .nav-btn { color: var(--text); }
+  .nav-item:hover .nav-btn::after { transform: scaleX(1); }
+  .nav-item:hover .nav-chevron-icon { transform: rotate(180deg); }
+}
+
+/* タップによるメガメニュー表示（スマホ） */
+.nav-item.open .mega-menu {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+.nav-item.open .nav-btn { color: var(--text); }
+.nav-item.open .nav-btn::after { transform: scaleX(1); }
+.nav-item.open .nav-chevron-icon { transform: rotate(180deg); }
 
 /* ── Top controls (simplified) ── */
 .top-controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; }
@@ -968,7 +990,22 @@ function buildNavCats() {
     </div>`;
   }).join('');
 
-  // トラックパッド横スクロール（Shift+ホイールを追加でも対応）
+  // タップでメガメニュー開閉（スマホ・タッチデバイス対応）
+  container.addEventListener('click', e => {
+    const btn = e.target.closest('.nav-btn');
+    if (!btn) return;
+    const item = btn.closest('.nav-item');
+    const isOpen = item.classList.contains('open');
+    container.querySelectorAll('.nav-item.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+    e.stopPropagation();
+  });
+  // メガメニュー外タップで閉じる
+  document.addEventListener('click', () => {
+    container.querySelectorAll('.nav-item.open').forEach(el => el.classList.remove('open'));
+  });
+
+  // トラックパッド横スクロール
   container.addEventListener('wheel', e => {
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // 横スクロールはそのまま
     if (e.deltaY !== 0) {
