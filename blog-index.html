@@ -585,6 +585,14 @@ input[type="text"]::placeholder { color:var(--text-muted); }
 .action-btn:hover { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb,var(--accent) 6%,transparent); }
 .action-btn.primary { border-color:var(--accent); color:var(--accent); background:color-mix(in srgb,var(--accent) 8%,transparent); }
 .action-btn.primary:hover { background:color-mix(in srgb,var(--accent) 16%,transparent); }
+/* 動画ボタン */
+.action-btn.video { border-color:#ef4444; color:#ef4444; background:color-mix(in srgb,#ef4444 8%,transparent); }
+.action-btn.video:hover { background:color-mix(in srgb,#ef4444 16%,transparent); }
+/* 動画リクエストボタン */
+.action-btn.request { border-color:var(--border2); color:var(--text-muted); }
+.action-btn.request:hover { border-color:#f59e0b; color:#f59e0b; background:color-mix(in srgb,#f59e0b 8%,transparent); }
+/* リクエスト済 */
+.action-btn.requested { border-color:#f59e0b; color:#f59e0b; background:color-mix(in srgb,#f59e0b 10%,transparent); }
 
 .empty-state { text-align:center; padding:56px 20px; color:var(--text-muted); }
 .empty-state .icon { font-size:28px; margin-bottom:10px; }
@@ -871,7 +879,7 @@ input[type="text"]::placeholder { color:var(--text-muted); }
 //   operatingMargin(%) ★追加推奨
 // =============================================
 const BLOG_JP_DATA = [
-  { date:"2026-04-11", code:"2872", name:"セイヒョー",        tags:["高配当株"], url:"blog/2872_セイヒョー_2.html",        prevUrl:null, fy:"2025", period:"3Q", dividendYield:null, per:null, pbr:null, roe:null, marketCap:null, equityRatio:null, payoutRatio:null, dividendGrowth:null },
+  { date:"2026-04-11", code:"2872", name:"セイヒョー",        tags:["高配当株"], url:"blog/2872_セイヒョー_2.html",        videoUrl:"https://www.youtube.com/@mayuzumi_history", prevUrl:null, fy:"2025", period:"3Q", dividendYield:null, per:null, pbr:null, roe:null, marketCap:null, equityRatio:null, payoutRatio:null, dividendGrowth:null },
   { date:"2026-04-11", code:"6555", name:"ＭＳ＆コンサル",   tags:["高配当株"], url:"blog/6555_ＭＳ＆コンサル_2.html",   prevUrl:null, fy:"2025", period:"3Q", dividendYield:null, per:null, pbr:null, roe:null, marketCap:null, equityRatio:null, payoutRatio:null, dividendGrowth:null },
   { date:"2026-04-11", code:"3280", name:"エストラスト",      tags:["高配当株"], url:"blog/3280_エストラスト_2.html",      prevUrl:null, fy:"2025", period:"3Q", dividendYield:null, per:null, pbr:null, roe:null, marketCap:null, equityRatio:null, payoutRatio:null, dividendGrowth:null },
   { date:"2026-04-11", code:"6489", name:"前澤工業",          tags:["高配当株"], url:"blog/6489_前澤工業_2.html",          prevUrl:null, fy:"2025", period:"3Q", dividendYield:null, per:null, pbr:null, roe:null, marketCap:null, equityRatio:null, payoutRatio:null, dividendGrowth:null },
@@ -1258,6 +1266,18 @@ function selectDate(dateStr) {
   currentPage=1; renderCalendar(); render();
 }
 
+// ── 動画リクエスト ──
+const VID_KEY = 'kessan_vid_req';
+function getVidReqs() {
+  try { return JSON.parse(localStorage.getItem(VID_KEY)||'{}'); } catch(e) { return {}; }
+}
+function requestVideo(key) {
+  const reqs = getVidReqs();
+  reqs[key] = reqs[key] ? 0 : 1; // トグル
+  localStorage.setItem(VID_KEY, JSON.stringify(reqs));
+  render();
+}
+
 // ── Render articles ──
 function render() {
   updateSearchMode();
@@ -1309,10 +1329,17 @@ function render() {
   }
 
   const fmt=(v,unit,dec=1)=>v==null?'—':`${Number(v).toFixed(dec)}${unit}`;
+  const vidReqs = getVidReqs();
   list.innerHTML = displayRows.map((r,i) => {
     const tags=getTags(r), tc=tags[0]||'その他';
     const period=(r.fy&&r.period)?`${r.fy}${r.period}`:'';
     const sz=capSize(r.marketCap);
+    const vidKey = `${r.code||r.ticker}_${r.date}`;
+    const vidBtn = r.videoUrl
+      ? `<a class="action-btn video" href="${r.videoUrl}" target="_blank" rel="noopener">▶ 動画</a>`
+      : vidReqs[vidKey]
+        ? `<button class="action-btn requested" onclick="requestVideo('${vidKey}')">🎥 リクエスト済</button>`
+        : `<button class="action-btn request"    onclick="requestVideo('${vidKey}')">🎥 動画リクエスト</button>`;
     return `<div class="article-row" style="animation-delay:${i*16}ms">
       <div class="type-dot ${tc}"></div>
       <div>
@@ -1332,6 +1359,7 @@ function render() {
       </div>
       <div class="article-actions">
         <a class="action-btn primary" href="${r.url}" target="_blank" rel="noopener">記事 →</a>
+        ${vidBtn}
         ${r.prevUrl?`<a class="action-btn" href="${r.prevUrl}" target="_blank" rel="noopener">← 前期</a>`:''}
       </div>
     </div>`;
