@@ -316,8 +316,9 @@ h1 span { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webki
 /* モバイル対応 */
 @media (max-width: 768px) {
   .wrapper { padding-top: 82px !important; }
-  /* ナビバーは表示したまま */
-  .nav-logo-text { font-size: 13px; }
+  /* ロゴはアイコンのみ（テキスト非表示でカテゴリ欄を広く） */
+  .nav-logo-text { display: none; }
+  .nav-logo { margin-right: 6px; }
   .nav-right { display: none; } /* 検索・フラグは省略 */
   .nav-cats-wrap::after { display: none; }
 
@@ -994,6 +995,11 @@ function buildNavCats() {
 
   // タップでメガメニュー開閉（スマホ・タッチデバイス対応）
   container.addEventListener('click', e => {
+    // メガメニュー内のクリックはdocumentに伝えない（閉じないようにする）
+    if (e.target.closest('.mega-menu')) {
+      e.stopPropagation();
+      return;
+    }
     const btn = e.target.closest('.nav-btn');
     if (!btn) return;
     const item = btn.closest('.nav-item');
