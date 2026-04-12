@@ -591,7 +591,9 @@ input[type="text"]::placeholder { color:var(--text-muted); }
 
 @media (max-width:768px) {
   .layout { grid-template-columns:1fr; }
-  .sidebar { position:static; max-height:none; }
+  .sidebar { position:static; max-height:none; transition:opacity .2s, max-height .25s ease; overflow:hidden; }
+  /* 検索中はサイドバーを隠す */
+  .layout.searching .sidebar { max-height:0 !important; opacity:0; pointer-events:none; margin:0; padding:0; }
   .back-link { display:none; }
 }
 </style>
@@ -1055,6 +1057,19 @@ function syncNavSearch(val) {
   if (main) { main.value = val; render(); }
 }
 
+// スマホ検索中はサイドバーを隠す
+function updateSearchMode() {
+  const q = document.getElementById('searchInput').value.trim();
+  const layout = document.querySelector('.layout');
+  if (!layout) return;
+  // スマホ幅のみ
+  if (window.innerWidth <= 768) {
+    layout.classList.toggle('searching', q.length > 0);
+  } else {
+    layout.classList.remove('searching');
+  }
+}
+
 // showTab のナビバーボタンも連動
 function updateNavFlags(tab) {
   ['jp','us'].forEach(t => {
@@ -1239,6 +1254,7 @@ function selectDate(dateStr) {
 
 // ── Render articles ──
 function render() {
+  updateSearchMode();
   const data = currentData();
   const q = normalize(document.getElementById('searchInput').value.trim());
   const rows = data.filter(r => {
@@ -1347,8 +1363,9 @@ function goPage(p) {
   const now=new Date(); calYear=now.getFullYear(); calMonth=now.getMonth();
   selectedDate=null; // 日付フィルターなしで最新30件表示
   RANGE_KEYS.forEach(k => updateRange(k));
-  buildNavCats(); // ナビ先に生成してからメガメニュー注入
+  buildNavCats();
   buildTagUI(); renderCalendar(); render(); initPresets(); buildMegaMenus();
+  window.addEventListener('resize', updateSearchMode);
 })();
 </script>
 </body>
