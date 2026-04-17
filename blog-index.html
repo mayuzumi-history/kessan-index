@@ -699,6 +699,48 @@ input[type="text"]::placeholder { color:var(--text-muted); }
       </div>
     </div>
 
+    <!-- ⭐ プリセット -->
+    <div class="s-card" id="card-preset">
+      <div class="s-card-head" onclick="toggleCard('preset')">
+        <span class="s-card-icon">⭐</span>
+        <span class="s-card-title">フィルタープリセット</span>
+        <div class="s-chevron">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="s-card-body">
+        <div class="s-card-inner">
+          <div class="s-card-inner-pad">
+            <div class="preset-list">
+              <div class="preset-row" id="preset-row-1">
+                <div class="preset-slot" id="preset-slot-1">A</div>
+                <input class="preset-name" id="preset-name-1" type="text" placeholder="プリセット A" maxlength="16">
+                <button class="preset-btn load" onclick="loadPreset(1)" id="preset-load-1" disabled>適用</button>
+                <button class="preset-btn save" onclick="savePreset(1)">保存</button>
+              </div>
+              <div class="preset-row" id="preset-row-2">
+                <div class="preset-slot" id="preset-slot-2">B</div>
+                <input class="preset-name" id="preset-name-2" type="text" placeholder="プリセット B" maxlength="16">
+                <button class="preset-btn load" onclick="loadPreset(2)" id="preset-load-2" disabled>適用</button>
+                <button class="preset-btn save" onclick="savePreset(2)">保存</button>
+              </div>
+              <div class="preset-row" id="preset-row-3">
+                <div class="preset-slot" id="preset-slot-3">C</div>
+                <input class="preset-name" id="preset-name-3" type="text" placeholder="プリセット C" maxlength="16">
+                <button class="preset-btn load" onclick="loadPreset(3)" id="preset-load-3" disabled>適用</button>
+                <button class="preset-btn save" onclick="savePreset(3)">保存</button>
+              </div>
+            </div>
+            <p style="font-size:10px;color:var(--text-muted);margin-top:10px;font-family:var(--font-mono);line-height:1.5;">
+              現在のフィルター状態を名前をつけて保存。<br>ブラウザに記録されます。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 🏷 タグフィルター -->
     <div class="s-card" id="card-tags">
       <div class="s-card-head" onclick="toggleCard('tags')">
@@ -806,48 +848,6 @@ input[type="text"]::placeholder { color:var(--text-muted); }
                 <input type="range" class="dr-input" id="max-dividendGrowth" min="0" max="30" step="1" value="30" oninput="updateRange('dividendGrowth')">
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ⭐ プリセット -->
-    <div class="s-card" id="card-preset">
-      <div class="s-card-head" onclick="toggleCard('preset')">
-        <span class="s-card-icon">⭐</span>
-        <span class="s-card-title">フィルタープリセット</span>
-        <div class="s-chevron">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
-      <div class="s-card-body">
-        <div class="s-card-inner">
-          <div class="s-card-inner-pad">
-            <div class="preset-list">
-              <div class="preset-row" id="preset-row-1">
-                <div class="preset-slot" id="preset-slot-1">A</div>
-                <input class="preset-name" id="preset-name-1" type="text" placeholder="プリセット A" maxlength="16">
-                <button class="preset-btn load" onclick="loadPreset(1)" id="preset-load-1" disabled>適用</button>
-                <button class="preset-btn save" onclick="savePreset(1)">保存</button>
-              </div>
-              <div class="preset-row" id="preset-row-2">
-                <div class="preset-slot" id="preset-slot-2">B</div>
-                <input class="preset-name" id="preset-name-2" type="text" placeholder="プリセット B" maxlength="16">
-                <button class="preset-btn load" onclick="loadPreset(2)" id="preset-load-2" disabled>適用</button>
-                <button class="preset-btn save" onclick="savePreset(2)">保存</button>
-              </div>
-              <div class="preset-row" id="preset-row-3">
-                <div class="preset-slot" id="preset-slot-3">C</div>
-                <input class="preset-name" id="preset-name-3" type="text" placeholder="プリセット C" maxlength="16">
-                <button class="preset-btn load" onclick="loadPreset(3)" id="preset-load-3" disabled>適用</button>
-                <button class="preset-btn save" onclick="savePreset(3)">保存</button>
-              </div>
-            </div>
-            <p style="font-size:10px;color:var(--text-muted);margin-top:10px;font-family:var(--font-mono);line-height:1.5;">
-              現在のフィルター状態を名前をつけて保存。<br>ブラウザに記録されます。
-            </p>
           </div>
         </div>
       </div>
@@ -5027,7 +5027,19 @@ function render() {
       if (!code.includes(q) && !name.includes(q) && !r.date.includes(q)) return false;
     }
     return true;
-  }).sort((a,b) => b.date.localeCompare(a.date));
+  }).sort((a,b) => {
+    // 日付降順
+    const dateCmp = b.date.localeCompare(a.date);
+    if (dateCmp !== 0) return dateCmp;
+    // 検索未入力時：ブログ/動画あり優先
+    if (!q) {
+      const aHas = (a.url || a.videoUrl) ? 1 : 0;
+      const bHas = (b.url || b.videoUrl) ? 1 : 0;
+      if (bHas !== aHas) return bHas - aHas;
+    }
+    // 証券コード順
+    return (a.code||'').localeCompare(b.code||'');
+  });
 
   // ページネーション計算
   const total     = rows.length;
